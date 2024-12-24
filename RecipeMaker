@@ -1,0 +1,160 @@
+import React, { useState } from 'react';
+
+interface Recipe {
+  id: number;
+  name: string;
+  description: string;
+  ingredients: string[];
+}
+
+interface Ingredient {
+  name: string;
+}
+
+const ingredients: Ingredient[] = [
+  { name: 'Chicken' },
+  { name: 'Beef' },
+  { name: 'Fish' },
+  { name: 'Eggs' },
+  { name: 'Milk' },
+  { name: 'Bread' },
+  { name: 'Rice' },
+  { name: 'Pasta' },
+  { name: 'Vegetables' },
+  { name: 'Fruits' },
+];
+
+const Recipes = () => {
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [selectedIngredients, setSelectedIngredients] = useState<string[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentRecipe, setCurrentRecipe] = useState<Recipe | null>(null);
+
+  const handleCreateRecipe = () => {
+    const newRecipe: Recipe = {
+      id: recipes.length + 1,
+      name,
+      description,
+      ingredients: selectedIngredients,
+    };
+    setRecipes([...recipes, newRecipe]);
+    setName('');
+    setDescription('');
+    setSelectedIngredients([]);
+  };
+
+  const handleUpdateRecipe = () => {
+    if (currentRecipe) {
+      const updatedRecipe: Recipe = {
+        id: currentRecipe.id,
+        name,
+        description,
+        ingredients: selectedIngredients,
+      };
+      setRecipes(recipes.map(recipe => recipe.id === currentRecipe.id ? updatedRecipe : recipe));
+      setIsEditing(false);
+      setCurrentRecipe(null);
+      setName('');
+      setDescription('');
+      setSelectedIngredients([]);
+    }
+  };
+
+  const handleDeleteRecipe = (id: number) => {
+    setRecipes(recipes.filter(recipe => recipe.id !== id));
+  };
+
+  const handleEditRecipe = (recipe: Recipe) => {
+    setIsEditing(true);
+    setCurrentRecipe(recipe);
+    setName(recipe.name);
+    setDescription(recipe.description);
+    setSelectedIngredients(recipe.ingredients);
+  };
+
+  return (
+    <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-screen p-4">
+      <h1 className="text-3xl font-bold text-white mb-4">Recipe Manager</h1>
+      <div className="flex flex-wrap justify-center mb-4">
+        {recipes.map(recipe => (
+          <div key={recipe.id} className="bg-white rounded-lg p-4 m-2 w-1/2 md:w-1/3 lg:w-1/4">
+            <h2 className="text-2xl font-bold mb-2">{recipe.name}</h2>
+            <p className="mb-2">{recipe.description}</p>
+            <ul className="mb-2">
+              {recipe.ingredients.map(ingredient => (
+                <li key={ingredient}>{ingredient}</li>
+              ))}
+            </ul>
+            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={() => handleEditRecipe(recipe)}>Edit</button>
+            <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded" onClick={() => handleDeleteRecipe(recipe.id)}>Delete</button>
+          </div>
+        ))}
+      </div>
+      <div className="bg-white rounded-lg p-4 m-2 w-full md:w-1/2 lg:w-1/3">
+        <h2 className="text-2xl font-bold mb-2">{isEditing ? 'Update Recipe' : 'Create Recipe'}</h2>
+        <input
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          placeholder="Recipe Name"
+          className="block w-full p-2 mb-2 border border-gray-400 rounded"
+        />
+        <textarea
+          value={description}
+          onChange={e => setDescription(e.target.value)}
+          placeholder="Recipe Description"
+          className="block w-full p-2 mb-2 border border-gray-400 rounded"
+        />
+        <IngredientSelector
+          ingredients={ingredients}
+          selectedIngredients={selectedIngredients}
+          setSelectedIngredients={setSelectedIngredients}
+        />
+        {isEditing ? (
+          <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleUpdateRecipe}>Update Recipe</button>
+        ) : (
+          <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCreateRecipe}>Create Recipe</button>
+        )}
+      </div>
+    </div>
+  );
+};
+
+interface IngredientSelectorProps {
+  ingredients: Ingredient[];
+  selectedIngredients: string[];
+  setSelectedIngredients: (ingredients: string[]) => void;
+}
+
+const IngredientSelector: React.FC<IngredientSelectorProps> = ({ ingredients, selectedIngredients, setSelectedIngredients }) => {
+  const handleSelectIngredient = (ingredient: string) => {
+    if (selectedIngredients.includes(ingredient)) {
+      setSelectedIngredients(selectedIngredients.filter(i => i !== ingredient));
+    } else {
+      setSelectedIngredients([...selectedIngredients, ingredient]);
+    }
+  };
+
+  return (
+    <div className="mb-2">
+      <h3 className="text-xl font-bold mb-2">Ingredients:</h3>
+      <ul>
+        {ingredients.map(ingredient => (
+          <li key={ingredient.name}>
+            <input
+              type="checkbox"
+              checked={selectedIngredients.includes(ingredient.name)}
+              onChange={() => handleSelectIngredient(ingredient.name)}
+              className="mr-2"
+            />
+            {ingredient.name}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
+export default Recipes;
